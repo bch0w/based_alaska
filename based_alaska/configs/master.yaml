@@ -1,0 +1,147 @@
+#                        BASED ALASKA MASTER CONFIG
+#
+# This is the master config file for based_alaska. Any changes to the flags or 
+# parameters within the package should be defined here first and then 
+# propagated into sub-config files. 
+#
+# ============================================================================== 
+# FLAGS - Turn various components on and off
+# ------------------------------------------------------------------------------
+# moment_tensors (bool): plot moment tensors from file 
+# ============================================================================== 
+FLAGS:
+    save_figure: True
+    show_figure: True
+    moment_tensors: True
+    map_inset: True
+    landmarks: True
+    scale_bar: True
+
+# ============================================================================== 
+# BASEMAP - Define the region, projection, and other 'scaffolding' attributes
+# ------------------
+# region (list): corner lat/lon values to define your region of interest
+# frame (list of str): strings to be passed to the outline frame defining the
+#   border of the base map
+# projection (str): preferred GMT projection and required inputs
+# map_scale (str): if scale bar requested (see flags), location and size of
+#   the plotted bar
+# ============================================================================== 
+BASEMAP:
+    region: 
+        - -168.
+        - -140.
+        - 64.5
+        - 72.
+    frame:
+        - WSnE
+        - xa
+        - ya
+    projection: "L-155/68/67/69/12c"
+    resolution: "h"
+    map_scale: "g-144/71+w200"
+    area_thresh: 10000
+    kwargs: {}
+
+# ============================================================================== 
+# INSET - Define a base map for a map inset
+# ------------------
+# kwargs: a list of open-ended keyword arguments that can be passed to the 
+#   coast plotting script for the inset map. These can be used to e.g., 
+#   overwrite colors that will be taken from BASEMAP
+# ============================================================================== 
+INSET:
+    position: "n0/.75+w5c/4c"
+    margin: 0
+    region: 
+        - -170.
+        - -135.
+        - 53
+        - 72.
+    frame:
+        - WSnE
+        - xa
+        - ya
+    projection: "L-150/62/63/64/3.5c"
+    area_thresh: 100
+    kwargs: {}
+
+# ============================================================================== 
+# FILES - Locations of files containing map information, e.g., faults, stations
+#   note: If no file location given values may also be taken directly from a 
+#   config file. E.g., landmark locations can be specified as a list
+# ------------------------------------------------------------------------------
+# ============================================================================== 
+FILES:
+    fid_out: "alaska_map.png"
+    output: "./output"
+    moment_tensors: "/home/bchow/work/data/earthquakes/nalaska_mts_nolabel.txt"
+    landmarks: ""
+
+# ============================================================================== 
+# COLORS - Set colors of various objects within the plot. 
+# -----
+# ============================================================================== 
+COLORS:
+    coast: black
+    land: gray
+    water: white
+    lakes: gray
+    background_transparent: False
+    inset_land: gray
+    inset_water: white
+
+# ============================================================================== 
+# PENS - Set pen attributes for various objects within the plot. Pens and colors
+# may overlap in certain places
+# -----
+# scalebar (float): thickness of scalebar pen, will be used to temporarily set
+#   MAP_TICK_PEN_PRIMARY in GMT config
+# ============================================================================== 
+PENS:
+    moment_tensors: "1p/black" 
+    scalebar: 1.5
+    shorelines:
+        - "1/1.5p,black"
+        - "2/1p,black"
+
+
+# ============================================================================== 
+# MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
+#   At the moment, moment tensor plotting follows GCMT file formats
+# ------------------------------------------------------------------------------
+# mode (str): 
+#   GCMT - plot in GCMT psmeca format which has the following columns:
+#   lon lat depth mrr mtt mpp mrt mrp mtp iexp name
+# color_by (str): determine how to color the moment tensors
+#   available: 'depth', 'magnitude'
+# scale (str): standard relative size of the moment tensors on the figure
+# convention (str): 'mt' for full moment tensor, 'dc' for closest double couple
+# cmap (str): GMT colormap to use when plotting beachballs
+# colorbar (dict): 
+# kwargs (dict): passed to PyGMT.figure.psmeca()
+# ============================================================================== 
+MOMENT_TENSORS:
+    mode: GCMT
+    color_by: depth
+    scale: .35c
+    cmap_discretization: 1
+    convention: mt
+    cmap: seis
+    colorbar: 
+        position: "n.95/.825+w-2c/.45c"
+        frame: "af+l'depth [km'"
+    kwargs: {}
+
+# ============================================================================== 
+# LISTS - Coordinate lists that can be directly placed in the config file to 
+#   reduce the overall number of files required to plot. These constitute,
+#   e.g., cities, landmarks, plate labels etc.
+# -----
+# ============================================================================== 
+LISTS:
+    LANDMARKS:
+        
+    
+
+
