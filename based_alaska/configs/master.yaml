@@ -13,9 +13,12 @@ FLAGS:
     save_figure: True
     show_figure: True
     moment_tensors: True
+    mt_colorbar: True
+    stations: True
     map_inset: True
     landmarks: True
     scale_bar: True
+    earth_relief: True
 
 # ============================================================================== 
 # BASEMAP - Define the region, projection, and other 'scaffolding' attributes
@@ -39,7 +42,10 @@ BASEMAP:
         - ya
     projection: "L-155/68/67/69/12c"
     resolution: "h"
-    map_scale: "g-144/71+w200"
+    map_scale: "g-144/71.5+w200"
+    earth_relief: 
+        resolution: "01m"  # "15s"
+        cmap: "geo"
     area_thresh: 10000
     kwargs: {}
 
@@ -62,6 +68,7 @@ INSET:
         - WSnE
         - xa
         - ya
+    resolution: "i"
     projection: "L-150/62/63/64/3.5c"
     area_thresh: 100
     kwargs: {}
@@ -76,6 +83,21 @@ FILES:
     fid_out: "alaska_map.png"
     output: "./output"
     moment_tensors: "/home/bchow/work/data/earthquakes/nalaska_mts_nolabel.txt"
+    stations: "/home/bchow/work/data/stations/STATIONS_AK.txt"
+    landmarks: ""
+
+
+# ============================================================================== 
+# FORMATS - Formats of input files to let based Alaska know how to read them
+# ------------------------------------------------------------------------------
+# moment_tensors (str): 
+#   GCMT - lon lat depth mrr mtt mpp mrt mrp mtp iexp name
+# stations (str): 
+#   SPECFEM - sta net lon lat depth elevation
+# ============================================================================== 
+FORMATS:
+    moment_tensors: "GCMT"
+    stations: "SPECFEM"
     landmarks: ""
 
 # ============================================================================== 
@@ -93,26 +115,30 @@ COLORS:
 
 # ============================================================================== 
 # PENS - Set pen attributes for various objects within the plot. Pens and colors
-# may overlap in certain places
+# may overlap in certain places, or be contained within other headers. These 
+# pens are for attributes that don't fit under another header.
+#
+# NOTE: Pen attributes are defined as: width, color, texture
+#   - width can be c (cm), i (inch), p (points), m (meters)
+#   - color is a named GMT color
+#   - texture is the line attribute, e.g. . (dotted), - (dashed)
+#
 # -----
 # scalebar (float): thickness of scalebar pen, will be used to temporarily set
 #   MAP_TICK_PEN_PRIMARY in GMT config
 # ============================================================================== 
 PENS:
-    moment_tensors: "1p/black" 
+    moment_tensors: "1p,black" 
     scalebar: 1.5
     shorelines:
-        - "1/1.5p,black"
-        - "2/1p,black"
+        - "1p,black,"
+        - "1p,black,"
 
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
 #   At the moment, moment tensor plotting follows GCMT file formats
 # ------------------------------------------------------------------------------
-# mode (str): 
-#   GCMT - plot in GCMT psmeca format which has the following columns:
-#   lon lat depth mrr mtt mpp mrt mrp mtp iexp name
 # color_by (str): determine how to color the moment tensors
 #   available: 'depth', 'magnitude'
 # scale (str): standard relative size of the moment tensors on the figure
@@ -122,25 +148,69 @@ PENS:
 # kwargs (dict): passed to PyGMT.figure.psmeca()
 # ============================================================================== 
 MOMENT_TENSORS:
-    mode: GCMT
     color_by: depth
     scale: .35c
-    cmap_discretization: 1
+    cmap_discretization: 5
     convention: mt
     cmap: seis
     colorbar: 
         position: "n.95/.825+w-2c/.45c"
-        frame: "af+l'depth [km'"
+        frame: 'af+l"depth [km]"'
     kwargs: {}
+
+
+# ============================================================================== 
+# STATIONS - Control the look of stations plotted 
+# ------------------------------------------------------------------------------
+# color_by (str): if a named GMT color, all stations plotted as single color
+#   if 'network', each network plotted different color
+# network_color (dict): if color_by=='network', define what color is assigned
+#   to what network. If a network is not named, it will be plotted with the 
+#   plot_kwargs['color'] value
+#
+# ============================================================================== 
+STATIONS:
+    color_by: "network"
+    network_colors: {"TA": "white"}
+    plot_kwargs: {"style": "i0.3c", "color": "gray", "pen": "1p,black"}
+
+# ============================================================================== 
+# MARKERS - Control plotting look for lists of values such as cities, landmarks
+#   plate labels etc.
+#
+#   NOTE: '=' in the font specification outlines the text (text first), while
+#         '=~' in the font specification draws the outline first
+# ============================================================================== 
+CITIES:
+    plot_kwargs: {"style": "c0.25c", "color": "gray", "pen": "1p,black"}
+    text_kwargs: {"font": "8p,black=~1p,white"}
+LANDMARKS:
+    text_kwargs: {"font": "10p,white=~1.5p,black"}
 
 # ============================================================================== 
 # LISTS - Coordinate lists that can be directly placed in the config file to 
 #   reduce the overall number of files required to plot. These constitute,
 #   e.g., cities, landmarks, plate labels etc.
+#
+# NOTE: -Xh+2c moves horizontal 2cm up, -Xw/2 moves origin half width to right
 # -----
+# CITIES: name (str): marker_lon, marker_lat, text_lon, text_lat
+#
+# NOTE: If text_lon or text_lat not given, they will be copied from marker_???
 # ============================================================================== 
 LISTS:
+    CITIES:
+        Utqiagvik: -156.7886, 71.2906, -155., 71.4
+        Nome: -165.4064, 64.5011, -165., 64.8
+        Kotzebue: -162.5967, 66.8983, -164.,
+        Prudhoe Bay: -148.4012, 70.2268, -147., 70.5
+        Kaktovik: -143.6239, 70.1319, -142., 70.2
+        Fairbanks: -147.7164, 64.8378, -146., 65.1
+        Huslia: -156.3997, 65.6986, -156., 66.
     LANDMARKS:
+        North Slope: -158., 69.75
+        Brooks Range: -151., 67.8
+
         
     
 

@@ -1,6 +1,9 @@
 """
 Function for reading the Yaml config file
 """
+import os
+import sys
+import numpy as np
 import yaml
 
 class Dict(dict):
@@ -31,8 +34,64 @@ def read_yaml(fid):
 
     return Dict(attrs)
 
-       
+def read_stations(fid, fmt):
+    """
+    A generic read stations file that is capable of reading a variety of
+    input formats but always returns the same format expected by the main
+    plotting script.
 
+    :type fid: str
+    :param fid: file identifier
+    :type fmt: str
+    :param fmt: format
+    :rtype: dict
+    :return: a dictionary of station information that can be accessed by the
+        plotting script
+    """
+    assert(os.path.exists(fid)), f"station file {fid} does not exist"
+
+    stations_dict = Dict(networks=[], stations=[], latitudes=[], longitudes=[])
+    
+    # Read in SPECFEM3D STATIONS file format 
+    if fmt.upper() == "SPECFEM":
+        data = np.loadtxt(fid, dtype=str)
+        stations_dict.stations = data[:, 0]
+        stations_dict.networks = data[:, 1]
+        stations_dict.latitudes = data[:, 2].astype(float)
+        stations_dict.longitudes = data[:, 3].astype(float)
+    else:
+        sys.exit(f"Unexpected format {fmt} for stations file")
+
+    return stations_dict
+
+
+def read_list(fid=None, dict_data=None, fmt=None):
+    """
+    Read a list of points to plot, e.g., cities, landmarks, plate names
+    If fmt==None, will expect to be parsing an internal list in par file
+    """
+    
+    list_dict = Dict(names=[], x=[], y=[], x_text=[], y_text=[])
+
+    if (dict_data is not None) and (fmt is None):
+        list_dict.names = list(dict_data.keys())
+        coords = dict_data.values()
+        for coord in list(coords):
+            list_dict.x.append(float(coord.split(",")[0]))
+            list_dict.y.append(float(coord.split(",")[1]))
+            # If text position not given, take from marker position
+            try:
+                list_dict.x_text.append(float(coord.split(",")[2]))
+            except (IndexError, ValueError):
+                list_dict.x_text.append(float(coord.split(",")[0]))
+            try:
+                list_dict.y_text.append(float(coord.split(",")[3]))
+            except (IndexError, ValueError):
+                list_dict.y_text.append(float(coord.split(",")[1]))
+    else:
+        a=1/0
+
+    return list_dict
     
 
 
