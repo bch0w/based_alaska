@@ -12,7 +12,7 @@ import sys
 import numpy as np
 import pygmt
 
-from utils.read import read_yaml, read_stations, read_list
+from utils.read import read_yaml, read_stations, read_list, read_moment_tensors
 
 
 class BasedAlaska:
@@ -23,6 +23,9 @@ class BasedAlaska:
     def __init__(self, fid=None):
         """
         Must have a config file to initiate the based'ness
+
+        :type fid: str
+        :param fid: config file name
         """
         if fid is None:
             try:
@@ -32,161 +35,218 @@ class BasedAlaska:
                 print(f"No user config defined, setting config to {fid}")
 
         # Generate the full path to the config file, hardcoded dir. structure
-        fid = os.path.join(os.getcwd(), "configs", cfg_fid) + ".yaml"
+        fid = os.path.join(os.getcwd(), "configs", fid) + ".yaml"
 
         self.cfg = read_yaml(fid)
+        self.f = pygmt.Figure()
 
     def setup(self):
         """
         Setup the plot, which usually means frame, coastline or topography
         """
+        # Earth Relief (Topography) with a coastline outline
+        if self.cfg.FLAGS.earth_relief:
+            grid = pygmt.datasets.load_earth_relief(
+                resolution=self.cfg.BASEMAP.earth_relief.resolution,
+                region=self.cfg.BASEMAP.region
+            )
+            self.f.grdimage(grid=grid, projection=self.cfg.BASEMAP.projection,
+                            cmap=self.cfg.BASEMAP.earth_relief.cmap
+                            )
+            self.f.coast(projection=self.cfg.BASEMAP.projection,
+                         region=self.cfg.BASEMAP.region,
+                         shorelines=self.cfg.PENS.shorelines,
+                         frame=self.cfg.BASEMAP.frame,
+                         resolution=self.cfg.BASEMAP.resolution,
+                         area_thresh=self.cfg.BASEMAP.area_thresh,
+                         **self.cfg.BASEMAP.kwargs
+                         )
+        # OR Just a coastline with solid color water and land
+        else:
+            self.f.coast(projection=self.cfg.BASEMAP.projection,
+                         region=self.cfg.BASEMAP.region,
+                         shorelines=self.cfg.PENS.shorelines,
+                         frame=self.cfg.BASEMAP.frame,
+                         land=self.cfg.COLORS.land,
+                         water=self.cfg.COLORS.water,
+                         lakes=self.cfg.COLORS.lakes,
+                         area_thresh=self.cfg.BASEMAP.area_thresh,
+                         resolution=self.cfg.BASEMAP.resolution,
+                         **self.cfg.BASEMAP.kwargs
+                         )
+        # Map scale-bar
+        if self.cfg.FLAGS.scale_bar:
+            with pygmt.config(MAP_TICK_PEN_PRIMARY=self.cfg.PENS.scalebar):
+                self.f.basemap(region=self.cfg.BASEMAP.region,
+                               projection=self.cfg.BASEMAP.projection,
+                               map_scale=self.cfg.BASEMAP.map_scale
+                               )
 
-if __name__ == "__main__":
-    try:
-        cfg_fid = sys.argv[1]
-    except IndexError:
-        cfg_fid = "master"
-        print(f"No user config defined, setting config to {cfg_fid}")
-        
-    cfg_fid = os.path.join(os.getcwd(), "configs", cfg_fid) + ".yaml"
+    def inset(self):
+        """
+        Create a map inset to show a larger domain
+        """
+        if self.cfg.FLAGS.map_inset:
+            with self.f.inset(position=self.cfg.INSET.position,
+                              margin=self.cfg.INSET.margin):
+                self.f.coast(region=self.cfg.INSET.region,
+                             projection=self.cfg.INSET.projection,
+                             land=self.cfg.COLORS.inset_land,
+                             water=self.cfg.COLORS.inset_water,
+                             shorelines=self.cfg.PENS.shorelines,
+                             frame=self.cfg.INSET.frame,
+                             resolution=self.cfg.INSET.resolution,
+                             area_thresh=self.cfg.INSET.area_thresh
+                             )
+                # TO DO: Box the region here
+                # !!!!
 
-    # Determine if config parameter passed in actually matches
-    assert os.path.exists(cfg_fid), \
-            (f"config {cfg_fid} does not exist, check configs directory for "
-             f"available choices")
+    def stations(self):
+        """
+        Plot station markers either from a file or internal data
+        """
+        if not self.cfg.FLAGS.stations:
+            return
 
-    # Load in the config file to control the behavior of plotting functions
-    cfg = read_yaml(cfg_fid)
-
-    # Start baking
-    f = pygmt.Figure()
-
-    # Earth Relief (Topography) with a coastline outline
-    if cfg.FLAGS.earth_relief:
-        grid = pygmt.datasets.load_earth_relief(
-                    resolution=cfg.BASEMAP.earth_relief.resolution,
-                    region=cfg.BASEMAP.region
-                    )
-        f.grdimage(grid=grid, projection=cfg.BASEMAP.projection,
-                   cmap=cfg.BASEMAP.earth_relief.cmap)
-        f.coast(projection=cfg.BASEMAP.projection, region=cfg.BASEMAP.region,
-                shorelines=cfg.PENS.shorelines, frame=cfg.BASEMAP.frame,
-                resolution=cfg.BASEMAP.resolution, 
-                area_thresh=cfg.BASEMAP.area_thresh,
-                **cfg.BASEMAP.kwargs)
-    # OR Just a coastline with solid color water and land
-    else:
-        f.coast(projection=cfg.BASEMAP.projection, region=cfg.BASEMAP.region,
-                shorelines=cfg.PENS.shorelines, frame=cfg.BASEMAP.frame,
-                land=cfg.COLORS.land, water=cfg.COLORS.water, 
-                lakes=cfg.COLORS.lakes, area_thresh=cfg.BASEMAP.area_thresh, 
-                resolution=cfg.BASEMAP.resolution, **cfg.BASEMAP.kwargs)
-
-    # Add a scale bar for distance measurement
-    if cfg.FLAGS.scale_bar:
-        with pygmt.config(MAP_TICK_PEN_PRIMARY=cfg.PENS.scalebar):
-            f.basemap(region=cfg.BASEMAP.region, 
-                      projection=cfg.BASEMAP.projection,
-                      map_scale=cfg.BASEMAP.map_scale)
-
-    # Stations Markers, can color by different parameters
-    if cfg.FLAGS.stations:
         # Read stations from specified file
-        if cfg.FILES.stations:
-            stations = read_stations(cfg.FILES.stations, cfg.FORMATS.stations)
-            if cfg.STATIONS.color_by == "network":
-                # We will need to temporarily overwrite the color parameter in 
-                # kwargs
-                _kwargs = cfg.STATIONS.plot_kwargs
+        if self.cfg.FILES.stations:
+            stations = read_stations(self.cfg.FILES.stations,
+                                     self.cfg.FORMATS.stations)
+            if self.cfg.STATIONS.color_by == "network":
+                # We will need to temporarily overwrite the color parameter
+                # in kwargs
+                _kwargs = self.cfg.STATIONS.plot_kwargs
                 indices = np.array([], dtype=int)
-                for network, color in cfg.STATIONS.network_colors.items():
+                for network, color in self.cfg.STATIONS.network_colors.items():
                     _kwargs["color"] = color
-                    subset = np.where(stations.networks==network)[0]
-                    print(f"{len(subset)} stations in net {network}, {color}")
-                    f.plot(x=stations.longitudes[subset], 
-                           y=stations.latitudes[subset], **_kwargs)
+                    subset = np.where(stations.networks == network)[0]
+                    print(
+                        f"{len(subset)} stations in net {network}, {color}")
+                    self.f.plot(x=stations.longitudes[subset],
+                                y=stations.latitudes[subset], **_kwargs)
                     # Collect the plotted indices to get remainder
                     indices = np.concatenate((indices, subset))
                 # Plot remaining stations that arent already plotted
                 _remaining = np.delete(stations.latitudes, indices)
                 if _remaining.any():
                     print(f"{len(_remaining)} stations with default color")
-                    f.plot(x=np.delete(stations.longitudes, indices),
-                           y=np.delete(stations.latitudes, indices), 
-                           **cfg.STATIONS.plot_kwargs)
+                    self.f.plot(x=np.delete(stations.longitudes, indices),
+                                y=np.delete(stations.latitudes, indices),
+                                **self.cfg.STATIONS.plot_kwargs)
             else:
-                f.plot(x=stations.longitudes, y=stations.latitudes,  
-                       **cfg.STATIONS.plot_kwargs)
+                self.f.plot(x=stations.longitudes, y=stations.latitudes,
+                            **self.cfg.STATIONS.plot_kwargs)
         # Potentially gather stations on-the-fly here
         # !!!
 
-    # Earthquake moment tensors
-    if cfg.FLAGS.moment_tensors and cfg.FILES.moment_tensors:
+    def earthquakes(self):
+        """
+        Plot earthquakes not as beachballs, but just as markers
+        """
+        if not self.cfg.FLAGS.earthquakes:
+            return
+
+    def moment_tensors(self, file=None, fmt=None):
+        """
+        Plot beachball moment tensors or focal mechanisms
+        """
+        if not self.cfg.FLAGS.moment_tensors:
+            return
+        if file is None:
+            file = self.cfg.FILES.moment_tensors
+        if fmt is None:
+            fmt = self.cfg.FORMATS.moment_tensors
+
+        lats, lons, depths, mt_dict = read_moment_tensors(file, fmt)
+        print(f"{len(lats)} moment tensors colored by "
+              f"{self.cfg.MOMENT_TENSORS.color_by}")
+
         # Determine how to color the moment tensors
-        if cfg.MOMENT_TENSORS.color_by == "depth":
-            depths = np.loadtxt(cfg.FILES.moment_tensors, usecols=2, 
-                                dtype=float)
-            pygmt.makecpt(cmap=cfg.MOMENT_TENSORS.cmap, 
-                          series=[min(depths), max(depths), 
-                                  cfg.MOMENT_TENSORS.cmap_discretization]
+        if self.cfg.MOMENT_TENSORS.color_by == "depth":
+            pygmt.makecpt(
+                cmap=self.cfg.MOMENT_TENSORS.cmap,
+                series=[min(depths), max(depths),
+                        self.cfg.MOMENT_TENSORS.cmap_discretization]
                           )
         else:
             raise NotImplementedError(
-                    f"MOMENT_TENSOR.color_by = {cfg.MOMENT_TENSOR.color_by} "
-                    f"is not a valid parameter"
+                f"MOMENT_TENSOR.color_by = {self.cfg.MOMENT_TENSOR.color_by} "
+                f"is not a valid parameter"
+            )
+
+        # self.f.meca(spec=file,
+        #             scale=self.cfg.MOMENT_TENSORS.scale,
+        #             convention=self.cfg.MOMENT_TENSORS.convention,
+        #             C=self.cfg.FLAGS.mt_colorbar,
+        #             L=self.cfg.PENS.moment_tensors,
+        #             **self.cfg.MOMENT_TENSORS.kwargs
+        #             )
+        self.f.meca(spec=mt_dict, latitude=lats, longitude=lons, depth=depths,
+                    scale=self.cfg.MOMENT_TENSORS.scale,
+                    # convention=self.cfg.MOMENT_TENSORS.convention,
+                    C=self.cfg.FLAGS.mt_colorbar,
+                    L=self.cfg.PENS.moment_tensors,
+                    **self.cfg.MOMENT_TENSORS.kwargs
                     )
 
-        f.meca(cfg.FILES.moment_tensors, scale=cfg.MOMENT_TENSORS.scale,
-               convention=cfg.MOMENT_TENSORS.convention, 
-               C=cfg.FLAGS.mt_colorbar,
-               L=cfg.PENS.moment_tensors, **cfg.MOMENT_TENSORS.kwargs)
+        if self.cfg.FLAGS.mt_colorbar:
+            self.f.colorbar(
+                position=self.cfg.MOMENT_TENSORS.colorbar.position,
+                frame=self.cfg.MOMENT_TENSORS.colorbar.frame
+            )
 
-        if cfg.FLAGS.mt_colorbar:
-            f.colorbar(position=cfg.MOMENT_TENSORS.colorbar.position,
-                       frame=cfg.MOMENT_TENSORS.colorbar.frame)
+    def cities(self):
+        """
+        Plot lists of cities
+        """
+        if not self.cfg.LISTS.CITIES:
+            return
+        cities = read_list(dict_data=self.cfg.LISTS.CITIES)
+        self.f.plot(x=cities.x, y=cities.y, **self.cfg.CITIES.plot_kwargs)
+        self.f.text(text=cities.names, x=cities.x_text, y=cities.y_text,
+                    **self.cfg.CITIES.text_kwargs)
 
-    # Map inset with wider map view
-    if cfg.FLAGS.map_inset:
-        with f.inset(position=cfg.INSET.position, margin=cfg.INSET.margin):
-            f.coast(region=cfg.INSET.region, projection=cfg.INSET.projection,
-                    land=cfg.COLORS.inset_land, water=cfg.COLORS.inset_water,
-                    shorelines=cfg.PENS.shorelines, frame=cfg.INSET.frame,
-                    resolution=cfg.INSET.resolution, 
-                    area_thresh=cfg.INSET.area_thresh)
-            # TO DO: Box the region here
-            # !!!!
+    def landmarks(self):
+        """
+        Plot landmarks such as geographic locations, plate labels, etc.
+        """
+        if not self.cfg.LISTS.LANDMARKS:
+            return
+        landmarks = read_list(dict_data=self.cfg.LISTS.LANDMARKS)
+        self.f.text(text=landmarks.names, x=landmarks.x, y=landmarks.y,
+                    **self.cfg.LANDMARKS.text_kwargs)
 
-    # Plot lists of cities, landmarks etc.
-    if cfg.LISTS.CITIES:
-        cities = read_list(dict_data=cfg.LISTS.CITIES)
-        f.plot(x=cities.x, y=cities.y, **cfg.CITIES.plot_kwargs)
-        f.text(text=cities.names, x=cities.x_text, y=cities.y_text, 
-               **cfg.CITIES.text_kwargs)
+    def finalize(self):
+        """
+        Save the figure and show if required
+        """
+        if self.cfg.FLAGS.save_figure:
+            if not os.path.exists(self.cfg.FILES.output):
+                print(f"making output directory: {self.cfg.FILES.output}")
+                os.mkdirs(self.cfg.FILES.output)
 
-    if cfg.LISTS.LANDMARKS:
-        landmarks = read_list(dict_data=cfg.LISTS.LANDMARKS)
-        f.text(text=landmarks.names, x=landmarks.x, y=landmarks.y,
-               **cfg.LANDMARKS.text_kwargs)
-    
-    
-    # Finalizations 
-    if cfg.FLAGS.save_figure:
-        if not os.path.exists(cfg.FILES.output):
-            print(f"making output directory: {cfg.FILES.output}")
-            os.mkdirs(cfg.FILES.output)
+            self.f.savefig(
+                os.path.join(self.cfg.FILES.output, self.cfg.FILES.fid_out),
+                transparent=self.cfg.COLORS.background_transparent
+            )
 
-        f.savefig(os.path.join(cfg.FILES.output, cfg.FILES.fid_out), 
-                  transparent=cfg.COLORS.background_transparent)
-
-    if cfg.FLAGS.show_figure:
-        f.show(method="external")
-
+        if self.cfg.FLAGS.show_figure:
+            self.f.show(method="external")
 
 
-
-
-
-
-
-
+if __name__ == "__main__":
+    ba = BasedAlaska()
+    ba.setup()
+    ba.inset()
+    ba.stations()
+    ba.earthquakes()
+    if isinstance(ba.cfg.FILES.moment_tensors, list):
+        for fid, fmt in zip(ba.cfg.FILES.moment_tensors,
+                            ba.cfg.FORMATS.moment_tensors):
+            ba.moment_tensors(fid, fmt)
+    else:
+        ba.moment_tensors()
+    ba.cities()
+    ba.landmarks()
+    ba.finalize()
 

@@ -4,6 +4,8 @@ Function for reading the Yaml config file
 import os
 import sys
 import numpy as np
+import pandas as pd
+from obspy import read_events
 import yaml
 
 class Dict(dict):
@@ -34,6 +36,7 @@ def read_yaml(fid):
 
     return Dict(attrs)
 
+
 def read_stations(fid, fmt):
     """
     A generic read stations file that is capable of reading a variety of
@@ -63,6 +66,52 @@ def read_stations(fid, fmt):
         sys.exit(f"Unexpected format {fmt} for stations file")
 
     return stations_dict
+
+
+def read_moment_tensors(fid, fmt):
+    """
+    Read moment tensor information from disk
+    """
+    mt_dict = Dict(mrr=[], mtt=[], mff=[], mrt=[], mrf=[], mtf=[], exponent=[])
+
+    # Downloaded from GCMT in PSMECA format
+    if fmt.upper() == "GCMT":
+        data = np.loadtxt(fid, dtype=str)
+        lons = data[:, 0].astype(float)
+        lats = data[:, 1].astype(float)
+        depths = data[:, 2].astype(float)
+        mt_dict.mrr = data[:, 3].astype(float)
+        mt_dict.mtt = data[:, 4].astype(float)
+        mt_dict.mff = data[:, 5].astype(float)
+        mt_dict.mrt = data[:, 6].astype(float)
+        mt_dict.mrf = data[:, 7].astype(float)
+        mt_dict.mtf = data[:, 8].astype(float)
+        mt_dict.exponent = data[:, 9].astype(float)
+    elif fmt.upper() == "QUAKEML":
+        lats, lons, depths = [], [], []
+        cat = read_events(fid)
+        for event in cat:
+            try:
+                fm = Dict(
+                    event.preferred_focal_mechanism().moment_tensor.tensor
+                )
+            except AttributeError:
+                continue
+            lats.append(event.preferred_origin().latitude)
+            lons.append(event.preferred_origin().longitude)
+            depths.append(event.preferred_origin().depth * 1E-3)  # m -> km
+            mt_dict.mrr.append(fm.m_rr)
+            mt_dict.mtt.append(fm.m_tt)
+            mt_dict.mff.append(fm.m_pp)
+            mt_dict.mrt.append(fm.m_rt)
+            mt_dict.mrf.append(fm.m_rp)
+            mt_dict.mtf.append(fm.m_tp)
+            mt_dict.exponent.append(7)
+
+    # PyGMT.meca() plays nicer with Pandas Data Frames so convert before return
+    mt_dict = pd.DataFrame(mt_dict)
+
+    return lats, lons, depths, mt_dict
 
 
 def read_list(fid=None, dict_data=None, fmt=None):

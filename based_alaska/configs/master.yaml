@@ -14,6 +14,7 @@ FLAGS:
     show_figure: True
     moment_tensors: True
     mt_colorbar: True
+    earthquakes: True
     stations: True
     map_inset: True
     landmarks: True
@@ -82,7 +83,11 @@ INSET:
 FILES:
     fid_out: "alaska_map.png"
     output: "./output"
-    moment_tensors: "/home/bchow/work/data/earthquakes/nalaska_mts_nolabel.txt"
+    moment_tensors:
+        - "/home/bchow/work/data/earthquakes/nalaska_mts_nolabel.txt"
+        - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat_w_fm.xml"
+    earthquakes:
+        - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat.xml"
     stations: "/home/bchow/work/data/stations/STATIONS_AK.txt"
     landmarks: ""
 
@@ -90,13 +95,15 @@ FILES:
 # ============================================================================== 
 # FORMATS - Formats of input files to let based Alaska know how to read them
 # ------------------------------------------------------------------------------
-# moment_tensors (str): 
+# moment_tensors (list or str):
 #   GCMT - lon lat depth mrr mtt mpp mrt mrp mtp iexp name
 # stations (str): 
 #   SPECFEM - sta net lon lat depth elevation
 # ============================================================================== 
 FORMATS:
-    moment_tensors: "GCMT"
+    moment_tensors:
+        - "GCMT"
+        - "QUAKEML"
     stations: "SPECFEM"
     landmarks: ""
 
@@ -145,7 +152,7 @@ PENS:
 # convention (str): 'mt' for full moment tensor, 'dc' for closest double couple
 # cmap (str): GMT colormap to use when plotting beachballs
 # colorbar (dict): 
-# kwargs (dict): passed to PyGMT.figure.psmeca()
+# kwargs (dict): pa ssed to PyGMT.figure.psmeca()
 # ============================================================================== 
 MOMENT_TENSORS:
     color_by: depth
@@ -157,6 +164,7 @@ MOMENT_TENSORS:
         position: "n.95/.825+w-2c/.45c"
         frame: 'af+l"depth [km]"'
     kwargs: {}
+        #"verbose": "d"}
 
 
 # ============================================================================== 
