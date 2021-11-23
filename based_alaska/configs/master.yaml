@@ -11,9 +11,9 @@
 # ============================================================================== 
 FLAGS:
     save_figure: True
-    show_figure: True
+    show_figure: False
     moment_tensors: True
-    mt_colorbar: True
+    colorbar: True
     earthquakes: True
     stations: True
     map_inset: True
@@ -84,13 +84,11 @@ FILES:
     fid_out: "alaska_map.png"
     output: "./output"
     moment_tensors:
-        - "/home/bchow/work/data/earthquakes/nalaska_mts_nolabel.txt"
-        - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat_w_fm.xml"
-    earthquakes:
-        - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat.xml"
+        - "/home/bchow/work/data/earthquakes/moment_tensors/nalaska_mts_nolabel.txt"
+          # - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat_w_fm.xml"
+    earthquakes: "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat.xml"
     stations: "/home/bchow/work/data/stations/STATIONS_AK.txt"
     landmarks: ""
-
 
 # ============================================================================== 
 # FORMATS - Formats of input files to let based Alaska know how to read them
@@ -103,7 +101,8 @@ FILES:
 FORMATS:
     moment_tensors:
         - "GCMT"
-        - "QUAKEML"
+          # - "QUAKEML"
+    earthquakes: "QUAKEML"
     stations: "SPECFEM"
     landmarks: ""
 
@@ -150,22 +149,46 @@ PENS:
 #   available: 'depth', 'magnitude'
 # scale (str): standard relative size of the moment tensors on the figure
 # convention (str): 'mt' for full moment tensor, 'dc' for closest double couple
-# cmap (str): GMT colormap to use when plotting beachballs
-# colorbar (dict): 
+# colorbar (dict): list of options to control the look and position of colorbar
 # kwargs (dict): pa ssed to PyGMT.figure.psmeca()
 # ============================================================================== 
 MOMENT_TENSORS:
-    color_by: depth
     scale: .35c
-    cmap_discretization: 5
     convention: mt
-    cmap: seis
-    colorbar: 
-        position: "n.95/.825+w-2c/.45c"
-        frame: 'af+l"depth [km]"'
     kwargs: {}
         #"verbose": "d"}
 
+# ============================================================================== 
+# EARTHQUAKES - General plotting characteristics for earthquakes, for 
+#   parameters controlling moment tensors, see MOMENT_TENSORS. Parameters here
+#   may also control some of the look of the moment tensors
+# ------------------------------------------------------------------------------
+# ============================================================================== 
+EARTHQUAKES:
+    color_by: depth
+    plot_kwargs: {"style": "c0.1c", "pen": "1p,black"}
+
+# ============================================================================== 
+# COLORBAR/COLORMAP - Controls the colorbar and underlying colormap which is 
+#   used to define color on values. Applied to MOMENT_TENSORS and EARTHQUAKES
+# ------------------------------------------------------------------------------
+# cmap (str): GMT colormap to use when plotting beachballs
+# cmap_min (float): minimum value for the colormap, if None, defaults to min of 
+#   of the given list
+# cmap_max (float): maximum value for the colormap, same as cmap_min
+#   NOTE: cmap_min and cmap_max are important if there are multiple moment 
+#   tensor files, otherwise they will create their own colormaps that won't 
+#   line up and you may get incorrect color values
+# cmap_discretization (float): separation value for the colormap
+# ============================================================================== 
+COLORMAP:
+    cmap: seis
+    cmap_min: 10
+    cmap_max: 30
+    cmap_discretization: 5
+    colorbar: 
+        position: "n.95/.825+w-2c/.45c"
+        frame: 'af+l"depth [km]"'
 
 # ============================================================================== 
 # STATIONS - Control the look of stations plotted 

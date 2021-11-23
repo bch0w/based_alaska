@@ -12,7 +12,7 @@ import sys
 import numpy as np
 import pygmt
 
-from utils.read import read_yaml, read_stations, read_list, read_moment_tensors
+from utils.read import read_yaml, read_stations, read_list, read_earthquakes
 
 
 class BasedAlaska:
@@ -39,6 +39,16 @@ class BasedAlaska:
 
         self.cfg = read_yaml(fid)
         self.f = pygmt.Figure()
+
+    def check(self):
+        """
+        Parameter check function, just makes sure that the parameter file is set
+        up correctly so that the plotting functions, which are frankly not very
+        smart, won't break unexpectedly.
+        """
+        # Check that file and format lists match
+
+        # 
 
     def setup(self):
         """
@@ -139,61 +149,73 @@ class BasedAlaska:
         # Potentially gather stations on-the-fly here
         # !!!
 
-    def earthquakes(self):
-        """
-        Plot earthquakes not as beachballs, but just as markers
-        """
-        if not self.cfg.FLAGS.earthquakes:
-            return
-
-    def moment_tensors(self, file=None, fmt=None):
+    def earthquakes(self, fid=None, fmt=None, mt=True, colorbar=True):
         """
         Plot beachball moment tensors or focal mechanisms
         """
-        if not self.cfg.FLAGS.moment_tensors:
-            return
-        if file is None:
-            file = self.cfg.FILES.moment_tensors
-        if fmt is None:
-            fmt = self.cfg.FORMATS.moment_tensors
+        # Separate plotting parameters for earthquakes and moment tensors
+        if mt:
+            if not self.cfg.FLAGS.moment_tensors:
+                return
+            if fid is None:
+                fid = self.cfg.FILES.moment_tensors
+            if fmt is None:
+                fmt = self.cfg.FORMATS.moment_tensors
+        else:
+            if not self.cfg.FLAGS.earthquakes:
+                return
+            if fid is None:
+                fid = self.cfg.FILES.earthquakes
+            if fmt is None:
+                fmt = self.cfg.FORMATS.earthquakes
 
-        lats, lons, depths, mt_dict = read_moment_tensors(file, fmt)
-        print(f"{len(lats)} moment tensors colored by "
-              f"{self.cfg.MOMENT_TENSORS.color_by}")
+        lats, lons, depths, mt_dict = read_earthquakes(fid=fid, fmt=fmt, mt=mt)
+        if mt: 
+            _print_val = "moment tensors"
+        else:
+            _print_val = "earthquakes"
+        print(f"{len(lats)} {_print_val} colored by "
+              f"{self.cfg.EARTHQUAKES.color_by}")
 
         # Determine how to color the moment tensors
-        if self.cfg.MOMENT_TENSORS.color_by == "depth":
-            pygmt.makecpt(
-                cmap=self.cfg.MOMENT_TENSORS.cmap,
-                series=[min(depths), max(depths),
-                        self.cfg.MOMENT_TENSORS.cmap_discretization]
-                          )
+        if self.cfg.EARTHQUAKES.color_by == "depth":
+            self._make_cmap(depths, cbar=colorbar)
         else:
             raise NotImplementedError(
-                f"MOMENT_TENSOR.color_by = {self.cfg.MOMENT_TENSOR.color_by} "
+                f"EARTHQUAKES.color_by = {self.cfg.EARTHQUAKES.color_by} "
                 f"is not a valid parameter"
             )
+        
+        if mt:
+            self.f.meca(spec=mt_dict, latitude=lats, longitude=lons, 
+                        depth=depths, scale=self.cfg.MOMENT_TENSORS.scale,
+                        C=self.cfg.FLAGS.colorbar,
+                        L=self.cfg.PENS.moment_tensors,
+                        **self.cfg.MOMENT_TENSORS.kwargs
+                        )
+        else:
+            self.f.plot(x=lons, y=lats, cmap=self.cfg.FLAGS.colorbar,
+                        **self.cfg.EARTHQUAKES.plot_kwargs)
 
-        # self.f.meca(spec=file,
-        #             scale=self.cfg.MOMENT_TENSORS.scale,
-        #             convention=self.cfg.MOMENT_TENSORS.convention,
-        #             C=self.cfg.FLAGS.mt_colorbar,
-        #             L=self.cfg.PENS.moment_tensors,
-        #             **self.cfg.MOMENT_TENSORS.kwargs
-        #             )
-        self.f.meca(spec=mt_dict, latitude=lats, longitude=lons, depth=depths,
-                    scale=self.cfg.MOMENT_TENSORS.scale,
-                    # convention=self.cfg.MOMENT_TENSORS.convention,
-                    C=self.cfg.FLAGS.mt_colorbar,
-                    L=self.cfg.PENS.moment_tensors,
-                    **self.cfg.MOMENT_TENSORS.kwargs
-                    )
+    def _make_cmap(self, arr, cbar=True):
+        """
+        Make a colormap for use with colorbar
+        """
+        cmap_min = self.cfg.COLORMAP.cmap_min
+        if cmap_min is None:
+            cmap_min = min(arr)
+        cmap_max = self.cfg.COLORMAP.cmap_max
+        if cmap_max is None:
+            cmap_max = max(arr)
 
-        if self.cfg.FLAGS.mt_colorbar:
-            self.f.colorbar(
-                position=self.cfg.MOMENT_TENSORS.colorbar.position,
-                frame=self.cfg.MOMENT_TENSORS.colorbar.frame
-            )
+        pygmt.makecpt(
+            cmap=self.cfg.COLORMAP.cmap,
+            series=[cmap_min, cmap_max, self.cfg.COLORMAP.cmap_discretization]
+                      )
+
+        if cbar and self.cfg.FLAGS.colorbar:
+            self.f.colorbar(position=self.cfg.COLORMAP.colorbar.position, 
+                            frame=self.cfg.COLORMAP.colorbar.frame)
 
     def cities(self):
         """
@@ -239,13 +261,15 @@ if __name__ == "__main__":
     ba.setup()
     ba.inset()
     ba.stations()
-    ba.earthquakes()
+    ba.earthquakes(mt=False)
     if isinstance(ba.cfg.FILES.moment_tensors, list):
-        for fid, fmt in zip(ba.cfg.FILES.moment_tensors,
-                            ba.cfg.FORMATS.moment_tensors):
-            ba.moment_tensors(fid, fmt)
+        for i, (fid, fmt) in enumerate(zip(ba.cfg.FILES.moment_tensors,
+                                           ba.cfg.FORMATS.moment_tensors)):
+            ba.earthquakes(fid, fmt, mt=True,
+                           colorbar=bool(i+1==len(ba.cfg.FILES.moment_tensors))
+                           )
     else:
-        ba.moment_tensors()
+        ba.earthquakes(mt=True)
     ba.cities()
     ba.landmarks()
     ba.finalize()
