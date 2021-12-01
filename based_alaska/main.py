@@ -194,7 +194,8 @@ class BasedAlaska:
                         **self.cfg.MOMENT_TENSORS.kwargs
                         )
         else:
-            self.f.plot(x=lons, y=lats, cmap=self.cfg.FLAGS.colorbar,
+            self.f.plot(x=lons, y=lats, color=depths, 
+                        cmap=self.cfg.FLAGS.colorbar,
                         **self.cfg.EARTHQUAKES.plot_kwargs)
 
     def _make_cmap(self, arr, cbar=True):
