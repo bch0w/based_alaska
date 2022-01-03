@@ -16,7 +16,7 @@ FLAGS:
     colorbar: True
     earthquakes: True
     stations: True
-    map_inset: True
+    map_inset: False
     landmarks: True
     scale_bar: True
     earth_relief: True
@@ -85,8 +85,7 @@ FILES:
     output: "./output"
     moment_tensors:
         - "/home/bchow/work/data/earthquakes/moment_tensors/nalaska_mts_nolabel.txt"
-          # - "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat_w_fm.xml"
-    earthquakes: "/home/bchow/work/scratch/usgs_moment_tensors/usgs_alaska_cat.xml"
+    earthquakes: "/home/bchow/work/data/earthquakes/catalogs/usgs_alaska_cat.xml"
     stations: "/home/bchow/work/data/stations/STATIONS_AK.txt"
     landmarks: ""
 

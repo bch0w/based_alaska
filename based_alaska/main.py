@@ -246,7 +246,7 @@ class BasedAlaska:
         if self.cfg.FLAGS.save_figure:
             if not os.path.exists(self.cfg.FILES.output):
                 print(f"making output directory: {self.cfg.FILES.output}")
-                os.mkdirs(self.cfg.FILES.output)
+                os.mkdir(self.cfg.FILES.output)
 
             self.f.savefig(
                 os.path.join(self.cfg.FILES.output, self.cfg.FILES.fid_out),
