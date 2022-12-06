@@ -38,12 +38,3 @@ def catalog_to_mt_meca(cat):
     return latitude, longitude, depth, meca_dict
 
         
-
-
-    
-
-
-
-
-    
-

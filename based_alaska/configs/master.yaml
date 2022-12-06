@@ -19,7 +19,7 @@ FLAGS:
     map_inset: False
     landmarks: True
     scale_bar: True
-    earth_relief: True
+    earth_relief: False
 
 # ============================================================================== 
 # BASEMAP - Define the region, projection, and other 'scaffolding' attributes
@@ -81,12 +81,12 @@ INSET:
 # ------------------------------------------------------------------------------
 # ============================================================================== 
 FILES:
-    fid_out: "alaska_map.png"
+    fid_out: "nalaska_map.png"
     output: "./output"
     moment_tensors:
-        - "/home/bchow/work/data/earthquakes/moment_tensors/nalaska_mts_nolabel.txt"
-    earthquakes: "/home/bchow/work/data/earthquakes/catalogs/usgs_alaska_cat.xml"
-    stations: "/home/bchow/work/data/stations/STATIONS_AK.txt"
+        - "./tests/test_data/nalaska_moment_tensors.xml"
+    earthquakes: "./tests/test_data/nalaska_events.xml"
+    stations: "./tests/test_data/STATIONS_NALASKA"
     landmarks: ""
 
 # ============================================================================== 
@@ -99,8 +99,7 @@ FILES:
 # ============================================================================== 
 FORMATS:
     moment_tensors:
-        - "GCMT"
-          # - "QUAKEML"
+        - "QUAKEML"
     earthquakes: "QUAKEML"
     stations: "SPECFEM"
     landmarks: ""
@@ -138,7 +137,6 @@ PENS:
     shorelines:
         - "1p,black,"
         - "1p,black,"
-
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
@@ -182,8 +180,8 @@ EARTHQUAKES:
 # ============================================================================== 
 COLORMAP:
     cmap: seis
-    cmap_min: 10
-    cmap_max: 30
+    cmap_min: 0
+    cmap_max: 40
     cmap_discretization: 5
     colorbar: 
         position: "n.95/.825+w-2c/.45c"

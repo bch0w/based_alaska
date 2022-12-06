@@ -92,20 +92,21 @@ def read_earthquakes(fid, fmt, mt=True):
             mt_dict.mrf = data[:, 7].astype(float)
             mt_dict.mtf = data[:, 8].astype(float)
             mt_dict.exponent = data[:, 9].astype(float)
+    # Downloaded from data center in QUAKML (.xml) format
     elif fmt.upper() == "QUAKEML":
         lats, lons, depths = [], [], []
         cat = read_events(fid)
         for event in cat:
-            try:
-                fm = Dict(
-                    event.preferred_focal_mechanism().moment_tensor.tensor
-                )
-            except AttributeError:
-                continue
             lats.append(event.preferred_origin().latitude)
             lons.append(event.preferred_origin().longitude)
             depths.append(event.preferred_origin().depth * 1E-3)  # m -> km
             if mt:
+                try:
+                    fm = Dict(
+                        event.preferred_focal_mechanism().moment_tensor.tensor
+                    )
+                except AttributeError:
+                    continue
                 mt_dict.mrr.append(fm.m_rr)
                 mt_dict.mtt.append(fm.m_tt)
                 mt_dict.mff.append(fm.m_pp)
