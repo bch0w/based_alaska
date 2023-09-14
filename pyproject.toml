@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "based_alaska"
+version = "0.1.0"
+description = "Geophysical Basemaps focused on Alaska"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+authors = [
+    {name = "Bryant Chow"},
+    {email = "bhchow@alaska.edu"}
+]
+dependencies = [
+    "obspy",
+	"pandas",
+    "cartopy",
+    "pyyaml",
+	"pygmt",
+	"pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ipython", "ipdb"]
+
+[project.urls]
+repository = "https://github.com/bch0w/based_alaska"
+

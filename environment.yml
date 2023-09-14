@@ -1,0 +1,13 @@
+name: based_alaska
+channels:
+    - conda-forge
+dependencies:
+    - obspy
+    - cartopy
+    - pygmt
+    - pandas
+    - pyyaml
+    - pip
+    - pip:
+      - -e .
+       
