@@ -1,8 +1,7 @@
-#                        BASED ALASKA MASTER CONFIG
+#                             BASED ALASKA CONFIG
 #
-# This is the master config file for based_alaska. Any changes to the flags or 
-# parameters within the package should be defined here first and then 
-# propagated into sub-config files. 
+# For Figure 1 of Ambient Noise Adjoint Tomography of Northern Alaska
+# Bryant Chow and Carl Tape - BSSA 2023
 #
 # ============================================================================== 
 # FLAGS - Turn various components on and off
@@ -12,9 +11,9 @@
 FLAGS:
     save_figure: True
     show_figure: False
-    moment_tensors: True
+    moment_tensors: False
     colorbar: True
-    earthquakes: True
+    earthquakes: False
     stations: True
     map_inset: False
     landmarks: True
@@ -82,11 +81,11 @@ INSET:
 # ============================================================================== 
 FILES:
     fid_out: "nalaska_map.png"
-    output: "./output"
+    output: "./"
     moment_tensors:
-        - "./tests/test_data/nalaska_moment_tensors.xml"
-    earthquakes: "./tests/test_data/nalaska_events.xml"
-    stations: "./tests/test_data/STATIONS_NALASKA"
+        - ""
+    earthquakes: ""
+    stations: "./STATIONS"
     landmarks: ""
 
 # ============================================================================== 

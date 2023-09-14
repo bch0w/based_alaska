@@ -128,7 +128,7 @@ class BasedAlaska:
                 _kwargs = self.cfg.STATIONS.plot_kwargs
                 indices = np.array([], dtype=int)
                 for network, color in self.cfg.STATIONS.network_colors.items():
-                    _kwargs["color"] = color
+                    _kwargs["fill"] = color
                     subset = np.where(stations.networks == network)[0]
                     print(
                         f"{len(subset)} stations in net {network}, {color}")
