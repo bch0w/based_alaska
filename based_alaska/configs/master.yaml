@@ -17,6 +17,7 @@ FLAGS:
     earthquakes: True
     stations: True
     map_inset: False
+    outline_region: True
     landmarks: True
     scale_bar: True
     earth_relief: False
@@ -41,6 +42,7 @@ BASEMAP:
         - WSnE
         - xa
         - ya
+    borders: "a/0/.75p, black"
     projection: "L-155/68/67/69/12c"
     resolution: "h"
     map_scale: "g-144/71.5+w200"
@@ -52,7 +54,7 @@ BASEMAP:
 
 # ============================================================================== 
 # INSET - Define a base map for a map inset
-# ------------------
+# ------------------------------------------------------------------------------
 # kwargs: a list of open-ended keyword arguments that can be passed to the 
 #   coast plotting script for the inset map. These can be used to e.g., 
 #   overwrite colors that will be taken from BASEMAP
@@ -72,6 +74,23 @@ INSET:
     resolution: "i"
     projection: "L-150/62/63/64/3.5c"
     area_thresh: 100
+    kwargs: {}
+
+# ============================================================================== 
+# OUTLINE - Define the region to draw a rectangle around
+# ------------------------------------------------------------------------------
+# kwargs: a list of open-ended keyword arguments that can be passed to the 
+#   coast plotting script for the inset map. These can be used to e.g., 
+#   overwrite colors that will be taken from BASEMAP
+# ============================================================================== 
+OUTLINE:
+    region: 
+        - -170.
+        - -135.
+        - 53
+        - 72.
+    style: "r+s"
+    pen: "2p,blue"
     kwargs: {}
 
 # ============================================================================== 

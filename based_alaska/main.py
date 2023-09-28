@@ -11,6 +11,7 @@ import os
 import sys
 import numpy as np
 import pygmt
+import geopandas as gpd
 
 from utils.read import read_yaml, read_stations, read_list, read_earthquakes
 
@@ -18,7 +19,6 @@ from utils.read import read_yaml, read_stations, read_list, read_earthquakes
 class BasedAlaska:
     """
     A class to control plotting functionalities and store config parameters.
-    It's based, yo.
     """
     def __init__(self, fid=None):
         """
@@ -27,18 +27,13 @@ class BasedAlaska:
         :type fid: str
         :param fid: config file name
         """
-        if fid is None:
-            try:
-                fid = sys.argv[1]
-            except IndexError as e:
-                fid = "master"
-                print(f"No user config defined, setting config to {fid}")
-
-        # Generate the full path to the config file, hardcoded dir. structure
-        fid = os.path.join(os.getcwd(), "configs", fid) + ".yaml"
-
-        self.cfg = read_yaml(fid)
         self.f = pygmt.Figure()
+        
+        if fid is None:
+            fid = sys.argv[1]
+
+        # Load in the base parameters from the master config file
+        self.cfg = read_yaml(fid)
 
     def check(self):
         """
@@ -69,6 +64,7 @@ class BasedAlaska:
                          frame=self.cfg.BASEMAP.frame,
                          resolution=self.cfg.BASEMAP.resolution,
                          area_thresh=self.cfg.BASEMAP.area_thresh,
+                         borders=self.cfg.BASEMAP.borders,
                          **self.cfg.BASEMAP.kwargs
                          )
         # OR Just a coastline with solid color water and land
@@ -96,20 +92,35 @@ class BasedAlaska:
         """
         Create a map inset to show a larger domain
         """
-        if self.cfg.FLAGS.map_inset:
-            with self.f.inset(position=self.cfg.INSET.position,
-                              margin=self.cfg.INSET.margin):
-                self.f.coast(region=self.cfg.INSET.region,
-                             projection=self.cfg.INSET.projection,
-                             land=self.cfg.COLORS.inset_land,
-                             water=self.cfg.COLORS.inset_water,
-                             shorelines=self.cfg.PENS.shorelines,
-                             frame=self.cfg.INSET.frame,
-                             resolution=self.cfg.INSET.resolution,
-                             area_thresh=self.cfg.INSET.area_thresh
-                             )
-                # TO DO: Box the region here
-                # !!!!
+        if not self.cfg.FLAGS.map_inset:
+            return
+
+        with self.f.inset(position="jLT+o-.75c",
+                          box="+gwhite+p1p",
+                          region=self.cfg.INSET.region,
+                          projection=self.cfg.INSET.projection,
+                          ):
+            # Plot a rectangle ("r") in the inset map to show the area of 
+            # the main figure. 
+            region = self.cfg.BASEMAP.region
+            rectangle = [[region[0], region[2], region[1], region[3]]]
+            self.f.plot(data=rectangle, style="r+s", pen="1p,red")
+
+    def outline_region(self):
+        """
+        Outline a given study region so that your map borders can expand outside
+        the study region.
+        """
+        if not self.cfg.FLAGS.outline_region:
+            return
+        # Plot a rectangle ("r") in the inset map to show the area of the main
+        # figure. "+s" means that the first two columns are the longitude and
+        # latitude of the bottom left corner of the rectangle, and the last two
+        # columns the longitude and latitude of the upper right corner.
+        region = self.cfg.OUTLINE.region
+        rectangle = [[region[0], region[2], region[1], region[3]]]
+        self.f.plot(data=rectangle, style=self.cfg.OUTLINE.style,
+                    pen=self.cfg.PENS.outline, **self.cfg.OUTLINE.kwargs)
 
     def stations(self):
         """
@@ -198,6 +209,32 @@ class BasedAlaska:
                         cmap=self.cfg.FLAGS.colorbar,
                         **self.cfg.EARTHQUAKES.plot_kwargs)
 
+    def _plot_shapefile(self, fid, **kwargs):
+        """
+        Generic function to plot a Shapefile which has information about 
+        roads, faults etc.
+        """
+        gdf = gpd.read_file(fid)
+        idx_key = gdf.keys()[0]
+        idxs = set(gdf[idx_key])
+        for idx in idxs:
+            df = gdf[gdf[idx_key] == idx]
+            self.f.plot(df, **kwargs)
+
+    def faults(self):
+        """
+        Plot faults from Shapefiles read in using GeoPandas
+        """
+        for fid in self.cfg.FILES.faults:
+            self._plot_shapefile(fid, pen=self.cfg.PENS.faults, 
+                                 **self.cfg.FAULTS.kwargs)
+
+    def roads(self):
+        """Plot roads from Shapefiles read in using GeoPandas"""
+        for fid in self.cfg.FILES.roads:
+            self._plot_shapefile(fid, pen=self.cfg.PENS.roads, 
+                                 **self.cfg.ROADS.kwargs)
+
     def _make_cmap(self, arr, cbar=True):
         """
         Make a colormap for use with colorbar
@@ -220,7 +257,8 @@ class BasedAlaska:
 
     def cities(self):
         """
-        Plot lists of cities
+        Plot lists of cities. A marker will be plotted on the exact location
+        and the name of the city will be annotated adjacent.
         """
         if not self.cfg.LISTS.CITIES:
             return
@@ -231,13 +269,26 @@ class BasedAlaska:
 
     def landmarks(self):
         """
-        Plot landmarks such as geographic locations, plate labels, etc.
+        Plot landmarks such as geographic locations, plate labels, etc. Only
+        text is annotated, it is meant to be large and easily noticeable.
+
         """
         if not self.cfg.LISTS.LANDMARKS:
             return
         landmarks = read_list(dict_data=self.cfg.LISTS.LANDMARKS)
         self.f.text(text=landmarks.names, x=landmarks.x, y=landmarks.y,
                     **self.cfg.LANDMARKS.text_kwargs)
+
+    def structures(self):
+        """
+        Plot names of geologic structures like faults, basins, etc. These are
+        only text and meant to be small and out of the way.
+        """
+        if not self.cfg.LISTS.STRUCTURES:
+            return
+        structures = read_list(dict_data=self.cfg.LISTS.STRUCTURES)
+        self.f.text(text=structures.names, x=structures.x, y=structures.y,
+                    **self.cfg.STRUCTURES.text_kwargs)
 
     def finalize(self):
         """
@@ -248,10 +299,10 @@ class BasedAlaska:
                 print(f"making output directory: {self.cfg.FILES.output}")
                 os.mkdir(self.cfg.FILES.output)
 
-            self.f.savefig(
-                os.path.join(self.cfg.FILES.output, self.cfg.FILES.fid_out),
-                transparent=self.cfg.COLORS.background_transparent
-            )
+            fid_out = os.path.join(self.cfg.FILES.output, self.cfg.FILES.fid_out)
+            print(f"saving {fid_out}")
+            self.f.savefig(fid_out,
+                           transparent=self.cfg.COLORS.background_transparent)
 
         if self.cfg.FLAGS.show_figure:
             self.f.show(method="external")
@@ -261,6 +312,8 @@ if __name__ == "__main__":
     ba = BasedAlaska()
     ba.setup()
     ba.inset()
+    ba.faults()
+    ba.outline_region()
     ba.stations()
     ba.earthquakes(mt=False)
     if isinstance(ba.cfg.FILES.moment_tensors, list):
@@ -273,5 +326,6 @@ if __name__ == "__main__":
         ba.earthquakes(mt=True)
     ba.cities()
     ba.landmarks()
+    ba.structures()
     ba.finalize()
 

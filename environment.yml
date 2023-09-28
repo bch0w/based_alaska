@@ -6,6 +6,7 @@ dependencies:
     - cartopy
     - pygmt
     - pandas
+    - geopandas
     - pyyaml
     - pip
     - pip:

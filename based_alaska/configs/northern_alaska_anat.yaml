@@ -16,9 +16,10 @@ FLAGS:
     earthquakes: False
     stations: True
     map_inset: False
+    outline_region: False
     landmarks: True
     scale_bar: True
-    earth_relief: False
+    earth_relief: True
 
 # ============================================================================== 
 # BASEMAP - Define the region, projection, and other 'scaffolding' attributes
@@ -40,6 +41,7 @@ BASEMAP:
         - WSnE
         - xa
         - ya
+    borders: "a/1.5p,black"
     projection: "L-155/68/67/69/12c"
     resolution: "h"
     map_scale: "g-144/71.5+w200"
@@ -58,6 +60,7 @@ BASEMAP:
 # ============================================================================== 
 INSET:
     position: "n0/.75+w5c/4c"
+    # position: "jBR+o0.1c"
     margin: 0
     region: 
         - -170.
@@ -65,12 +68,36 @@ INSET:
         - 53
         - 72.
     frame:
-        - WSnE
         - xa
         - ya
     resolution: "i"
     projection: "L-150/62/63/64/3.5c"
     area_thresh: 100
+    kwargs: {}
+
+# ==============================================================================
+# OUTLINE - Define the region to draw a rectangle around
+# ------------------------------------------------------------------------------
+# kwargs: a list of open-ended keyword arguments that can be passed to the
+#   coast plotting script for the inset map. These can be used to e.g.,
+#   overwrite colors that will be taken from BASEMAP
+# ==============================================================================
+OUTLINE:
+    region:
+        - -168.
+        - -140.
+        - 64.5
+        - 72.
+    style: "r+s"
+    kwargs: {}
+
+# ==============================================================================
+# SHAPEFILES
+# ------------------------------------------------------------------------------
+# ==============================================================================
+FAULTS:
+    kwargs: {}
+ROADS:
     kwargs: {}
 
 # ============================================================================== 
@@ -85,8 +112,13 @@ FILES:
     moment_tensors:
         - ""
     earthquakes: ""
-    stations: "./STATIONS"
+    stations: "./STATIONS_PLOT"
     landmarks: ""
+    faults: 
+      - "/Users/chow/Work/data/mapping/nalaska_faults/mp141-quat/mp141-nak_conv.shp"
+      - "/Users/chow/Work/data/mapping/nalaska_faults/mp150-prequat-pflaker1994/mp150-pflaker-1994-nak_conv.shp"
+    roads:
+      - "/Users/chow/Work/data/mapping/ak_dot_roads/northern_alaska.nak_roads.shp"
 
 # ============================================================================== 
 # FORMATS - Formats of input files to let based Alaska know how to read them
@@ -136,6 +168,9 @@ PENS:
     shorelines:
         - "1p,black,"
         - "1p,black,"
+    outline: "2p,blue"
+    faults: "0.25p,black"
+    roads: "0.5p,black"
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
@@ -198,7 +233,7 @@ COLORMAP:
 # ============================================================================== 
 STATIONS:
     color_by: "network"
-    network_colors: {"TA": "white"}
+    network_colors: {"RCV": "red", "BOTH": "white"}
     plot_kwargs: {"style": "i0.3c", "fill": "gray", "pen": "1p,black"}
 
 # ============================================================================== 
@@ -209,10 +244,12 @@ STATIONS:
 #         '=~' in the font specification draws the outline first
 # ============================================================================== 
 CITIES:
-    plot_kwargs: {"style": "c0.25c", "fill": "gray", "pen": "1p,black"}
+    plot_kwargs: {"style": "c0.2c", "fill": "yellow", "pen": "1p,black"}
     text_kwargs: {"font": "8p,black=~1p,white"}
 LANDMARKS:
     text_kwargs: {"font": "10p,white=~1.5p,black"}
+STRUCTURES:
+    text_kwargs: { "font": "9p,black" }
 
 # ============================================================================== 
 # LISTS - Coordinate lists that can be directly placed in the config file to 
@@ -237,8 +274,11 @@ LISTS:
     LANDMARKS:
         North Slope: -158., 69.75
         Brooks Range: -151., 67.8
+    STRUCTURES:
+        CB: -158., 70.5
+        YB: -147., 66.3
+        NB: -149.5, 64.75
 
-        
     
 
 
