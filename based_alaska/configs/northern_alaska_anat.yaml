@@ -66,10 +66,6 @@ INSET:
     margin: 1p
     resolution: "i"
     area_thresh: 500
-    shorelines: "1/0.5,black"
-    colors: 
-        land: gray
-        water: lightcyan1
     frame: "g"
     region: "g"
     outline_region: 
@@ -136,7 +132,7 @@ COLORS:
     lakes: gray
     background_transparent: False
     inset_land: gray
-    inset_water: white
+    inset_water: lightcyan1
 
 # ============================================================================== 
 # PENS - Set pen attributes for various objects within the plot. Pens and colors
@@ -158,7 +154,8 @@ PENS:
     shorelines:
         - "1p,black,"
         - "1p,black,"
-    outline: "1.p,red"
+    inset_outline: "1.p,red"
+    inset_shorelines: "1/0.5,black"
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms

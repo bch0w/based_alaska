@@ -101,9 +101,9 @@ class BasedAlaska:
                 self.f.coast(projection=self.cfg.INSET.projection, 
                              region=self.cfg.INSET.region, 
                              frame=self.cfg.INSET.frame,
-                             land=self.cfg.INSET.colors.land, 
-                             water=self.cfg.INSET.colors.water,
-                             shorelines=self.cfg.INSET.shorelines,
+                             land=self.cfg.COLORS.inset_land,
+                             water=self.cfg.COLORS.inset_water,
+                             shorelines=self.cfg.PENS.inset_shorelines,
                              area_thresh=self.cfg.INSET.area_thresh
                              )
                 # Plot a rectangle ("r") in the inset map to show the area of 
@@ -115,7 +115,7 @@ class BasedAlaska:
                 rectangle = [[region[0], region[2], region[1], region[3]]]
                 self.f.plot(data=rectangle, 
                             style=self.cfg.INSET.outline_style,
-                            pen=self.cfg.PENS.outline, 
+                            pen=self.cfg.PENS.inset_outline, 
                             projection=self.cfg.INSET.projection,
                             )
 
@@ -314,7 +314,6 @@ if __name__ == "__main__":
     ba.inset()
     ba.roads()
     ba.faults()
-    ba.outline_region()
     ba.stations()
     ba.earthquakes(mt=False)
     if isinstance(ba.cfg.FILES.moment_tensors, list):

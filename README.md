@@ -11,5 +11,5 @@ This mapping package features:
 This package is a work in progress, and will likely see improvements in the coming years. At this stage, the following Northern Alaska example shows what Based\_Alaska is capable of with a single call:
 
 <p align="center">
-	<img src="based_alaska/docs/images/nalaska_map.png" />
+	<img src="docs/images/nalaska_map.png" />
 </p>
