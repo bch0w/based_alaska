@@ -49,6 +49,7 @@ class BasedAlaska:
         """
         Setup the plot, which usually means frame, coastline or topography
         """
+        print("setting up basemap")
         # Earth Relief (Topography) with a coastline outline
         if self.cfg.FLAGS.earth_relief:
             grid = pygmt.datasets.load_earth_relief(
@@ -90,37 +91,33 @@ class BasedAlaska:
 
     def inset(self):
         """
-        Create a map inset to show a larger domain
+        Create a map inset to show a larger domain somewhere near the zoomed in
+        version of this map
         """
-        if not self.cfg.FLAGS.map_inset:
-            return
-
-        with self.f.inset(position="jLT+o-.75c",
-                          box="+gwhite+p1p",
-                          region=self.cfg.INSET.region,
-                          projection=self.cfg.INSET.projection,
-                          ):
-            # Plot a rectangle ("r") in the inset map to show the area of 
-            # the main figure. 
-            region = self.cfg.BASEMAP.region
-            rectangle = [[region[0], region[2], region[1], region[3]]]
-            self.f.plot(data=rectangle, style="r+s", pen="1p,red")
-
-    def outline_region(self):
-        """
-        Outline a given study region so that your map borders can expand outside
-        the study region.
-        """
-        if not self.cfg.FLAGS.outline_region:
-            return
-        # Plot a rectangle ("r") in the inset map to show the area of the main
-        # figure. "+s" means that the first two columns are the longitude and
-        # latitude of the bottom left corner of the rectangle, and the last two
-        # columns the longitude and latitude of the upper right corner.
-        region = self.cfg.OUTLINE.region
-        rectangle = [[region[0], region[2], region[1], region[3]]]
-        self.f.plot(data=rectangle, style=self.cfg.OUTLINE.style,
-                    pen=self.cfg.PENS.outline, **self.cfg.OUTLINE.kwargs)
+        if self.cfg.FLAGS.map_inset:
+            with self.f.inset(position=self.cfg.INSET.position,
+                              margin=self.cfg.INSET.margin):
+                # Draw a normal map on the inset map
+                self.f.coast(projection=self.cfg.INSET.projection, 
+                             region=self.cfg.INSET.region, 
+                             frame=self.cfg.INSET.frame,
+                             land=self.cfg.INSET.colors.land, 
+                             water=self.cfg.INSET.colors.water,
+                             shorelines=self.cfg.INSET.shorelines,
+                             area_thresh=self.cfg.INSET.area_thresh
+                             )
+                # Plot a rectangle ("r") in the inset map to show the area of 
+                # the main figure. "+s" means that the first two columns are the 
+                # longitude and latitude of the bottom left corner of the 
+                # rectangle, and the last two columns the longitude and latitude 
+                # of the upper right corner.
+                region = self.cfg.INSET.outline_region
+                rectangle = [[region[0], region[2], region[1], region[3]]]
+                self.f.plot(data=rectangle, 
+                            style=self.cfg.INSET.outline_style,
+                            pen=self.cfg.PENS.outline, 
+                            projection=self.cfg.INSET.projection,
+                            )
 
     def stations(self):
         """
@@ -128,7 +125,8 @@ class BasedAlaska:
         """
         if not self.cfg.FLAGS.stations:
             return
-
+        
+        print(f"plotting station file")
         # Read stations from specified file
         if self.cfg.FILES.stations:
             stations = read_stations(self.cfg.FILES.stations,
@@ -225,15 +223,17 @@ class BasedAlaska:
         """
         Plot faults from Shapefiles read in using GeoPandas
         """
-        for fid in self.cfg.FILES.faults:
-            self._plot_shapefile(fid, pen=self.cfg.PENS.faults, 
-                                 **self.cfg.FAULTS.kwargs)
+        if self.cfg.FLAGS.faults:
+            print(f"plotting {len(self.cfg.FILES.faults)} fault file(s)")
+            for fid in self.cfg.FILES.faults:
+                self._plot_shapefile(fid, **self.cfg.FAULTS)
 
     def roads(self):
         """Plot roads from Shapefiles read in using GeoPandas"""
-        for fid in self.cfg.FILES.roads:
-            self._plot_shapefile(fid, pen=self.cfg.PENS.roads, 
-                                 **self.cfg.ROADS.kwargs)
+        if self.cfg.FLAGS.roads:
+            print(f"plotting {len(self.cfg.FILES.roads)} road file(s)")
+            for fid in self.cfg.FILES.roads:
+                self._plot_shapefile(fid, **self.cfg.ROADS)
 
     def _make_cmap(self, arr, cbar=True):
         """
@@ -312,6 +312,7 @@ if __name__ == "__main__":
     ba = BasedAlaska()
     ba.setup()
     ba.inset()
+    ba.roads()
     ba.faults()
     ba.outline_region()
     ba.stations()

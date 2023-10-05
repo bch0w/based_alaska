@@ -14,8 +14,10 @@ FLAGS:
     moment_tensors: False
     colorbar: True
     earthquakes: False
+    roads: True
+    faults: True
     stations: True
-    map_inset: False
+    map_inset: True
     outline_region: False
     landmarks: True
     scale_bar: True
@@ -59,46 +61,34 @@ BASEMAP:
 #   overwrite colors that will be taken from BASEMAP
 # ============================================================================== 
 INSET:
-    position: "n0/.75+w5c/4c"
-    # position: "jBR+o0.1c"
-    margin: 0
-    region: 
-        - -170.
-        - -135.
-        - 53
-        - 72.
-    frame:
-        - xa
-        - ya
+    position: "n.0275/.75+w5c/4c"  # n(left/right)/(up/down)+w
+    projection: "G-150/70/3c"  # orthographic, centered at 150, 70
+    margin: 1p
     resolution: "i"
-    projection: "L-150/62/63/64/3.5c"
-    area_thresh: 100
+    area_thresh: 500
+    shorelines: "1/0.5,black"
+    colors: 
+        land: gray
+        water: lightcyan1
+    frame: "g"
+    region: "g"
+    outline_region: 
+        - -168.  # lat min
+        - -140.  # lat max
+        - 64.5   # lon min
+        - 72.0   # lon max
+    outline_style: "r+s"
     kwargs: {}
 
-# ==============================================================================
-# OUTLINE - Define the region to draw a rectangle around
-# ------------------------------------------------------------------------------
-# kwargs: a list of open-ended keyword arguments that can be passed to the
-#   coast plotting script for the inset map. These can be used to e.g.,
-#   overwrite colors that will be taken from BASEMAP
-# ==============================================================================
-OUTLINE:
-    region:
-        - -168.
-        - -140.
-        - 64.5
-        - 72.
-    style: "r+s"
-    kwargs: {}
 
 # ==============================================================================
 # SHAPEFILES
 # ------------------------------------------------------------------------------
 # ==============================================================================
 FAULTS:
-    kwargs: {}
+    pen: "0.25p,black"
 ROADS:
-    kwargs: {}
+    pen: "0.75p,black"
 
 # ============================================================================== 
 # FILES - Locations of files containing map information, e.g., faults, stations
@@ -118,7 +108,7 @@ FILES:
       - "/Users/chow/Work/data/mapping/nalaska_faults/mp141-quat/mp141-nak_conv.shp"
       - "/Users/chow/Work/data/mapping/nalaska_faults/mp150-prequat-pflaker1994/mp150-pflaker-1994-nak_conv.shp"
     roads:
-      - "/Users/chow/Work/data/mapping/ak_dot_roads/northern_alaska.nak_roads.shp"
+      - "/Users/chow/Work/data/mapping/ak_dot_roads/northern_alaska/dalton/dalton.shp"
 
 # ============================================================================== 
 # FORMATS - Formats of input files to let based Alaska know how to read them
@@ -168,9 +158,7 @@ PENS:
     shorelines:
         - "1p,black,"
         - "1p,black,"
-    outline: "2p,blue"
-    faults: "0.25p,black"
-    roads: "0.5p,black"
+    outline: "1.p,red"
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
