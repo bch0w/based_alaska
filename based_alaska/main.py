@@ -13,7 +13,8 @@ import numpy as np
 import pygmt
 import geopandas as gpd
 
-from utils.read import read_yaml, read_stations, read_list, read_earthquakes
+from utils.read import (read_yaml, read_stations, read_list, read_earthquakes,
+                        read_pb_plate_boundaries)
 
 
 class BasedAlaska:
@@ -118,6 +119,18 @@ class BasedAlaska:
                             pen=self.cfg.PENS.inset_outline, 
                             projection=self.cfg.INSET.projection,
                             )
+
+                # Plot Bird 2003 Plate boundary model on the inset for reference
+                if self.CFG.FLAGS.inset_plate_boundaries:
+                    plate_boundaries = read_pb_plate_boundaries(
+                        fid=self.CFG.FILES.plate_boundaries)
+                    for segment in plate_boundaries:
+                        x, y = segment.T
+                        self.f.plot(x=x, y=y, 
+                                    pen=self.cfg.PENS.inset_plate_boundaries,
+                                    projection=self.cfg.INSET.projection
+                                    )
+
 
     def stations(self):
         """
@@ -314,7 +327,6 @@ if __name__ == "__main__":
     ba.inset()
     ba.roads()
     ba.faults()
-    ba.stations()
     ba.earthquakes(mt=False)
     if isinstance(ba.cfg.FILES.moment_tensors, list):
         for i, (fid, fmt) in enumerate(zip(ba.cfg.FILES.moment_tensors,
@@ -324,6 +336,7 @@ if __name__ == "__main__":
                            )
     else:
         ba.earthquakes(mt=True)
+    ba.stations()
     ba.cities()
     ba.landmarks()
     ba.structures()

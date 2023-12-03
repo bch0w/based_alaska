@@ -148,6 +148,34 @@ def read_list(fid=None, dict_data=None, fmt=None):
         a=1/0
 
     return list_dict
-    
+   
+
+def read_pb_plate_boundaries(fid="./pb2002_boundaries.dig"):
+    """
+    Read in Plate boundaries from Peter Birds 2002 publication which should
+    be line segments separated as sections. File can be found here (LA: 12/2/23)
+    https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2001GC000252
+    """
+    with open(fid, "r") as f:
+        lines = f.readlines()
+
+    segment = []
+    segments = []
+    for line in lines:
+        # Actual data points are comma-separated lat/lon values
+        if "," in line and len(line) == 27:
+            values = line.strip().split(",")
+            values = [float(_) for _ in values]
+            segment.append(values)
+        # Each line segment is broken by this string
+        elif "*** end of line segment ***" in line:
+            segments.append(np.array(segment))
+            segment = []
+        # Line segment names do not fall into either categories, ignored
+        else:
+            continue
+
+    return segments
+
 
 

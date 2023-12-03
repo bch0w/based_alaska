@@ -11,13 +11,14 @@
 FLAGS:
     save_figure: True
     show_figure: False
-    moment_tensors: False
+    moment_tensors: False # True
     colorbar: True
-    earthquakes: False
-    roads: True
-    faults: True
+    earthquakes: False # True
+    roads: False # True
+    faults: False # True
     stations: True
     map_inset: True
+    inset_plate_boundaries: True
     outline_region: False
     landmarks: True
     scale_bar: True
@@ -84,7 +85,7 @@ INSET:
 FAULTS:
     pen: "0.25p,black"
 ROADS:
-    pen: "0.75p,black"
+    pen: "0.75p,yellow"
 
 # ============================================================================== 
 # FILES - Locations of files containing map information, e.g., faults, stations
@@ -96,8 +97,8 @@ FILES:
     fid_out: "nalaska_map.png"
     output: "./"
     moment_tensors:
-        - ""
-    earthquakes: ""
+        - "/Users/chow/Work/work/akatom/manuscript/fig_srcrcv_map/usgs_alaska_cat_w_fm.xml"
+    earthquakes: "/Users/chow/Work/work/akatom/manuscript/fig_srcrcv_map/nalaska_eq_Mgt2_original.xml"
     stations: "./STATIONS_PLOT"
     landmarks: ""
     faults: 
@@ -105,6 +106,7 @@ FILES:
       - "/Users/chow/Work/data/mapping/nalaska_faults/mp150-prequat-pflaker1994/mp150-pflaker-1994-nak_conv.shp"
     roads:
       - "/Users/chow/Work/data/mapping/ak_dot_roads/northern_alaska/dalton/dalton.shp"
+    plate_boundaries: "/Users/chow/Work/data/mapping/bird_plate_boundaries/pb2002_boundaries.dig" 
 
 # ============================================================================== 
 # FORMATS - Formats of input files to let based Alaska know how to read them
@@ -149,13 +151,14 @@ COLORS:
 #   MAP_TICK_PEN_PRIMARY in GMT config
 # ============================================================================== 
 PENS:
-    moment_tensors: "1p,black" 
+    moment_tensors: "0.6p,black" 
     scalebar: 1.5
     shorelines:
         - "1p,black,"
         - "1p,black,"
     inset_outline: "1.p,red"
     inset_shorelines: "1/0.5,black"
+    inset_plate_boundaries: "0.25p,green"
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
@@ -172,7 +175,6 @@ MOMENT_TENSORS:
     scale: .35c
     convention: mt
     kwargs: {}
-        #"verbose": "d"}
 
 # ============================================================================== 
 # EARTHQUAKES - General plotting characteristics for earthquakes, for 
@@ -182,7 +184,7 @@ MOMENT_TENSORS:
 # ============================================================================== 
 EARTHQUAKES:
     color_by: depth
-    plot_kwargs: {"style": "c0.1c", "pen": "1p,black"}
+    plot_kwargs: {"style": "c0.065c", "pen": "0.25p,black"}
 
 # ============================================================================== 
 # COLORBAR/COLORMAP - Controls the colorbar and underlying colormap which is 
@@ -200,7 +202,7 @@ EARTHQUAKES:
 COLORMAP:
     cmap: seis
     cmap_min: 0
-    cmap_max: 40
+    cmap_max: 50
     cmap_discretization: 5
     colorbar: 
         position: "n.95/.825+w-2c/.45c"
@@ -218,7 +220,7 @@ COLORMAP:
 # ============================================================================== 
 STATIONS:
     color_by: "network"
-    network_colors: {"RCV": "red", "BOTH": "white"}
+    network_colors: {"RCV": "purple", "BOTH": "cyan"}
     plot_kwargs: {"style": "i0.3c", "fill": "gray", "pen": "1p,black"}
 
 # ============================================================================== 
@@ -234,7 +236,7 @@ CITIES:
 LANDMARKS:
     text_kwargs: {"font": "10p,white=~1.5p,black"}
 STRUCTURES:
-    text_kwargs: { "font": "9p,black" }
+    text_kwargs: { "font": "9p,white=~0.5p,black" }
 
 # ============================================================================== 
 # LISTS - Coordinate lists that can be directly placed in the config file to 
