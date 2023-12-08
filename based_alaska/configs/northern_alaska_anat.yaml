@@ -4,18 +4,18 @@
 # Bryant Chow and Carl Tape - BSSA 2023
 #
 # ============================================================================== 
-# FLAGS - Turn various components on and off
+# FLAGS - Turn various components on and off using either False/True or 0/1
 # ------------------------------------------------------------------------------
 # moment_tensors (bool): plot moment tensors from file 
 # ============================================================================== 
 FLAGS:
     save_figure: True
     show_figure: False
-    moment_tensors: False # True
+    moment_tensors: 1 # True
     colorbar: True
-    earthquakes: False # True
-    roads: False # True
-    faults: False # True
+    earthquakes: 1 # True
+    roads: 1 # True
+    faults: 1 # True
     stations: True
     map_inset: True
     inset_plate_boundaries: True
@@ -158,7 +158,7 @@ PENS:
         - "1p,black,"
     inset_outline: "1.p,red"
     inset_shorelines: "1/0.5,black"
-    inset_plate_boundaries: "0.25p,green"
+    inset_plate_boundaries: "0.2p,red"
 
 # ============================================================================== 
 # MOMENT TENSORS - Control the look of moment tensors or focal mechanisms
@@ -258,6 +258,7 @@ LISTS:
         Kaktovik: -143.6239, 70.1319, -142., 70.2
         Fairbanks: -147.7164, 64.8378, -146., 65.1
         Huslia: -156.3997, 65.6986, -156., 66.
+        Fort Yukon: -145.25639, 66.56722, -145., 67.
     LANDMARKS:
         North Slope: -158., 69.75
         Brooks Range: -151., 67.8

@@ -121,16 +121,15 @@ class BasedAlaska:
                             )
 
                 # Plot Bird 2003 Plate boundary model on the inset for reference
-                if self.CFG.FLAGS.inset_plate_boundaries:
+                if self.cfg.FLAGS.inset_plate_boundaries:
                     plate_boundaries = read_pb_plate_boundaries(
-                        fid=self.CFG.FILES.plate_boundaries)
+                        fid=self.cfg.FILES.plate_boundaries)
                     for segment in plate_boundaries:
                         x, y = segment.T
                         self.f.plot(x=x, y=y, 
                                     pen=self.cfg.PENS.inset_plate_boundaries,
                                     projection=self.cfg.INSET.projection
                                     )
-
 
     def stations(self):
         """
